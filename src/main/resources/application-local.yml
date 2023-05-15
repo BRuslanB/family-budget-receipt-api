@@ -1,0 +1,14 @@
+# general settings
+server:
+  port: 8002
+
+# spring settings
+spring:
+  mandatory:
+    file:
+      encoding: UTF-8
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: receiptDb

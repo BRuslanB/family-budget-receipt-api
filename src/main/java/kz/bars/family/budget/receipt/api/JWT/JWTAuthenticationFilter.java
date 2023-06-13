@@ -4,6 +4,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import kz.bars.family.budget.receipt.api.exeption.TokenExpiredException;
+import kz.bars.family.budget.receipt.api.exeption.UserNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -36,23 +38,31 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
         if (authHeader != null && authHeader.startsWith(JWTSecurityConstants.TOKEN_PREFIX)) {
             token = authHeader.substring(7);
-            userName = jwtTokenProvider.extractUsernameFromToken(token);
+            try {
+                userName = jwtTokenProvider.extractUsernameFromToken(token);
+            } catch (TokenExpiredException ex) {
+                log.error("!Access Token has expired or invalid, token={}", token);
+            }
         }
 
         if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(token);
+            try {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(token);
 
-            if (jwtTokenProvider.validateToken(token)) {
-                var authToken = new UsernamePasswordAuthenticationToken(userDetails, null,
-                        userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                // Validation access token
+                if (jwtTokenProvider.validateToken(token)) {
+                    var authToken = new UsernamePasswordAuthenticationToken(userDetails, null,
+                            userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
 
-                log.debug("!Authentication Token=" + SecurityContextHolder.getContext().getAuthentication().getName());
-                Set<String> roles = AuthorityUtils.authorityListToSet(SecurityContextHolder.getContext().getAuthentication().getAuthorities());
-                log.debug("!Authentication User roles: " + roles);
+                    log.debug("!Authentication User name: " + SecurityContextHolder.getContext().getAuthentication().getName());
+                    Set<String> roles = AuthorityUtils.authorityListToSet(SecurityContextHolder.getContext().getAuthentication().getAuthorities());
+                    log.debug("!Authentication User roles: " + roles);
 
+                }
+            } catch (UserNotFoundException ignored) {
             }
         }
 

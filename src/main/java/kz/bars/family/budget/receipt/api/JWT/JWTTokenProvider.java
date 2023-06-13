@@ -1,8 +1,11 @@
 package kz.bars.family.budget.receipt.api.JWT;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
+import kz.bars.family.budget.receipt.api.exeption.TokenExpiredException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
@@ -18,7 +21,12 @@ import java.util.stream.Collectors;
 public class JWTTokenProvider {
 
     public String extractUsernameFromToken(String token) {
-        return extractClaim(token, Claims::getSubject);
+        try {
+            return extractClaim(token, Claims::getSubject);
+        } catch (TokenExpiredException ex) {
+            // Handling an exception for an expired or erroneous token
+            throw new TokenExpiredException("Token has expired or invalid token");
+        }
     }
 
     public Date extractExpirationTimeFromToken(String theToken) {
@@ -26,20 +34,35 @@ public class JWTTokenProvider {
     }
 
     public Boolean validateToken(String theToken) {
-        return !isTokenExpired(theToken);
+        try {
+            return !isTokenExpired(theToken);
+        } catch (TokenExpiredException ex) {
+            // Handling an exception for an expired or erroneous token
+            return false;
+        }
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
+        try {
+            final Claims claims = extractAllClaims(token);
+            return claimsResolver.apply(claims);
+        } catch (TokenExpiredException ex) {
+            // Handling an exception for an expired or erroneous token
+            throw new TokenExpiredException("Token has expired or invalid token");
+        }
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSignedKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSignedKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (ExpiredJwtException | MalformedJwtException ex) {
+            // Handling an exception for an expired or erroneous token
+            throw new TokenExpiredException("Token has expired or invalid token");
+        }
     }
 
     private boolean isTokenExpired(String theToken) {

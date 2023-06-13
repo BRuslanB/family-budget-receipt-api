@@ -20,7 +20,25 @@ public class ReceiptServiceImpl implements ReceiptService {
     private final ReceiptRepo receiptRepo;
 
     @Override
-    public ReceiptDto addReceiptDto(ReceiptDto receiptDto) {
+    public ReceiptDto getReceiptDto(String id) {
+
+        ReceiptDto receiptDto = null;
+        Receipt receipt = receiptRepo.findById(new ObjectId(id)).orElse(null);
+
+        if (receipt != null) {
+            receiptDto = receipt.toDto();
+            log.debug("!Getting a Receipt: id={}", id);
+
+        } else {
+
+            log.error("!Receipt not found: id={}", id);
+        }
+
+        return receiptDto;
+    }
+
+    @Override
+    public String addReceiptDto(ReceiptDto receiptDto) {
 
         try {
             if (receiptDto != null) {
@@ -29,17 +47,17 @@ public class ReceiptServiceImpl implements ReceiptService {
 
                 receiptRepo.save(receipt);
 
-                log.debug("!New Receipt added, id={}, fileType={}, fileContent={}",
-                        receiptDto.getId(), receiptDto.getFileType(),
+                log.debug("!Receipt added: id={}, fileType={}, fileContent={}",
+                        receipt.getObjectId().toString(), receiptDto.getFileType(),
                         receiptDto.getFileContent().substring(0, 10) + "...");
 
-                return receiptDto;
+                return receipt.getObjectId().toString();
             }
 
         } catch (Exception ex) {
 
-            log.error("!Receipt not added, id={}, fileType={}, fileContent={}",
-                    receiptDto.getId(), receiptDto.getFileType(),
+            log.error("!Receipt not added: fileType={}, fileContent={}",
+                    receiptDto.getFileType(),
                     receiptDto.getFileContent().substring(0, 10) + "...");
 
             return null;
@@ -50,21 +68,7 @@ public class ReceiptServiceImpl implements ReceiptService {
     }
 
     @Override
-    public ReceiptDto getReceiptDto(String id) {
-
-        ReceiptDto receiptDto = null;
-        Receipt receipt = receiptRepo.findById(new ObjectId(id)).orElse(null);
-
-        if (receipt != null) {
-            receiptDto = receipt.toDto();
-        }
-        log.debug("!Getting a Receipt, id={}", id);
-
-        return receiptDto;
-    }
-
-    @Override
-    public ReceiptDto updateReceiptDto(ReceiptDto receiptDto) {
+    public String updateReceiptDto(ReceiptDto receiptDto) {
 
         try {
             ObjectId objId = new ObjectId(receiptDto.getId()); // Convert string id to ObjectId
@@ -80,11 +84,11 @@ public class ReceiptServiceImpl implements ReceiptService {
                         receiptDto.getId(), receiptDto.getFileType(),
                         receiptDto.getFileContent().substring(0, 10) + "...");
 
-                return receiptDto;
+                return receiptDto.getId();
 
             } else {
 
-                log.error("!Receipt not found, id={}", receiptDto.getId());
+                log.error("!Receipt not found: id={}", receiptDto.getId());
                 return null;
             }
 
@@ -101,18 +105,19 @@ public class ReceiptServiceImpl implements ReceiptService {
         try {
             if (receiptRepo.findById(new ObjectId(id)).orElse(null) != null) {
                 receiptRepo.deleteById(new ObjectId(id));
-                log.debug("!Receipt removed, id={}", id);
+
+                log.debug("!Receipt removed: id={}", id);
                 return id;
 
             } else {
 
-                log.error("!Receipt not found, id={}", id);
+                log.error("!Receipt not found: id={}", id);
                 return null;
             }
 
         } catch (Exception ex) {
 
-            log.error("!Receipt not removed, id={}", id);
+            log.error("!Receipt not removed: id={}", id);
             return null;
         }
     }

@@ -7,9 +7,9 @@ import java.util.List;
 public interface ReceiptService {
     ReceiptDto getReceiptDto(String id);
 
-    ReceiptDto addReceiptDto(ReceiptDto receiptDto);
+    String addReceiptDto(ReceiptDto receiptDto);
 
-    ReceiptDto updateReceiptDto(ReceiptDto receiptDto);
+    String updateReceiptDto(ReceiptDto receiptDto);
 
     String deleteReceiptDto(String id);
 

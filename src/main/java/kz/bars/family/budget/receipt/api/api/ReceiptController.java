@@ -101,20 +101,4 @@ public class ReceiptController {
 
     }
 
-    @GetMapping()
-    @PreAuthorize("isAuthenticated()")
-    @Operation(description = "Getting a list of All Receipts")
-    public ResponseEntity<Object> getAllReceipt() {
-
-        log.debug("!Call method getting a list of All Receipts");
-
-        if (SecurityContextHolder.getContext().getAuthentication().isAuthenticated()) {
-
-            List<ReceiptDto> receiptDtoList = receiptService.getAllReceiptDto();
-            return ResponseEntity.ok(receiptDtoList);
-        }
-        return new ResponseEntity<>(new MessageResponse("Receipt list not found"), HttpStatus.BAD_REQUEST);
-
-    }
-
 }

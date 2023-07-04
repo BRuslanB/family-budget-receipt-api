@@ -9,9 +9,6 @@ import lombok.extern.log4j.Log4j2;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 @Log4j2
@@ -27,7 +24,9 @@ public class ReceiptServiceImpl implements ReceiptService {
 
         if (receipt != null) {
             receiptDto = receipt.toDto();
-            log.debug("!Getting a Receipt: id={}", id);
+            log.debug("!Getting a Receipt: id={}, file, Type={}, fileContent={}",
+                    receiptDto.getId(), receiptDto.getFileType(),
+                    receiptDto.getFileContent().substring(0, 20) + "...");
 
         } else {
 
@@ -49,7 +48,7 @@ public class ReceiptServiceImpl implements ReceiptService {
 
                 log.debug("!Receipt added: id={}, fileType={}, fileContent={}",
                         receipt.getObjectId().toString(), receiptDto.getFileType(),
-                        receiptDto.getFileContent().substring(0, 10) + "...");
+                        receiptDto.getFileContent().substring(0, 20) + "...");
 
                 return receipt.getObjectId().toString();
             }
@@ -58,7 +57,7 @@ public class ReceiptServiceImpl implements ReceiptService {
 
             log.error("!Receipt not added: fileType={}, fileContent={}",
                     receiptDto.getFileType(),
-                    receiptDto.getFileContent().substring(0, 10) + "...");
+                    receiptDto.getFileContent().substring(0, 20) + "...");
 
             return null;
         }
@@ -82,7 +81,7 @@ public class ReceiptServiceImpl implements ReceiptService {
 
                 log.debug("!Receipt updated, id={}, fileType={}, fileContent={}",
                         receiptDto.getId(), receiptDto.getFileType(),
-                        receiptDto.getFileContent().substring(0, 10) + "...");
+                        receiptDto.getFileContent().substring(0, 20) + "...");
 
                 return receiptDto.getId();
 
@@ -120,15 +119,6 @@ public class ReceiptServiceImpl implements ReceiptService {
             log.error("!Receipt not removed: id={}", id);
             return null;
         }
-    }
-
-    @Override
-    public List<ReceiptDto> getAllReceiptDto() {
-
-        List<Receipt> receipts = receiptRepo.findAll();
-        log.debug("!Getting a list of All Receipts");
-
-        return receipts.stream().map(Receipt::toDto).collect(Collectors.toList());
     }
 
 }
